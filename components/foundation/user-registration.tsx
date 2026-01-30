@@ -84,7 +84,7 @@ export function UserRegistration() {
         <CardContent className="flex flex-col items-center justify-center py-8 text-center">
           <UserPlus className="mb-4 h-12 w-12 text-muted-foreground/50" />
           <p className="text-muted-foreground">
-            Connect your wallet to register with the ZKLAIM protocol
+            Connect your wallet to register with the ZKlaim protocol
           </p>
         </CardContent>
       </Card>
@@ -141,7 +141,7 @@ export function UserRegistration() {
           User Registration
         </CardTitle>
         <CardDescription>
-          Register on-chain to use the ZKLAIM protocol
+          Register on-chain to use the ZKlaim protocol
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

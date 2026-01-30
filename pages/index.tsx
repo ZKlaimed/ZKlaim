@@ -77,7 +77,7 @@ export default function Home() {
         {/* Features Section */}
         <section className="container mx-auto py-24">
           <div className="mb-16 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Why ZKLAIM?</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Why ZKlaim?</h2>
             <p className="mt-4 text-lg text-muted-foreground">
               Built on the principles of privacy, automation, and trust.
             </p>
