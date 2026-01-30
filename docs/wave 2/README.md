@@ -1,18 +1,24 @@
 # Wave 2: Attestation Registry
 
-**Objective:** First real contract deployment and integration - prove the full vertical slice works.
+**Objective:** First business-logic contract deployment - real insurance attestations on-chain.
 
-**Theme:** First end-to-end blockchain integration
+**Theme:** First domain-specific contract with real value
 
-**Depends on:** Wave 1
+**Depends on:** Wave 1 (foundation contract already deployed)
 
 ---
 
 ## Overview
 
-Wave 2 is the critical proof-of-concept wave. We deploy our first real smart contract (`attestation_registry.aleo`) and integrate it with the frontend. By the end of this wave, you'll have completed a full round-trip: request attestation → on-chain record → view in dashboard.
+Wave 2 deploys the first **business-logic** contract (`attestation_registry.aleo`). Unlike the foundation contract from Wave 1 (which focused on pipeline validation), this contract implements real domain functionality: managing attestations that users will need for insurance eligibility.
 
-This is where we prove the architecture works.
+By the end of this wave, you'll have completed a full attestation flow: request attestation → on-chain record → view in dashboard.
+
+Building on Wave 1's foundation:
+- ✅ Leo CLI and Aleo SDK already working
+- ✅ Wallet adapter and transaction signing proven
+- ✅ Basic contract interaction patterns established
+- Now: **Real insurance domain logic**
 
 ---
 
