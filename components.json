@@ -18,5 +18,51 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {}
+  "registries": {
+    "@shadcn": {
+      "url": "https://ui.shadcn.com/r"
+    },
+    "@magicui": {
+      "url": "https://magicui.design/r"
+    },
+    "@aceternity": {
+      "url": "https://ui.aceternity.com/r"
+    },
+    "@originui": {
+      "url": "https://originui.com/r"
+    },
+    "@cult-ui": {
+      "url": "https://www.cult-ui.com/r"
+    },
+    "@hover-dev": {
+      "url": "https://hover.dev/r"
+    },
+    "@motion-primitives": {
+      "url": "https://motion-primitives.com/r"
+    },
+    "@eldora-ui": {
+      "url": "https://www.eldoraui.site/r"
+    },
+    "@farmui": {
+      "url": "https://farmui.com/r"
+    },
+    "@kokonut-ui": {
+      "url": "https://kokonut.dev/r"
+    },
+    "@luxe": {
+      "url": "https://luxeui.com/r"
+    },
+    "@ibelick": {
+      "url": "https://bg.ibelick.com/r"
+    },
+    "@animata": {
+      "url": "https://animata.design/r"
+    },
+    "@syntax-ui": {
+      "url": "https://syntaxui.com/r"
+    },
+    "@21st-ui": {
+      "url": "https://21st.dev/r"
+    }
+  }
 }
