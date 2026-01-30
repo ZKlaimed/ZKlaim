@@ -1,28 +1,78 @@
-# Wave 1: Foundation & TypeScript Migration
+# Wave 1: Foundation & Wallet Infrastructure
 
-**Objective:** Establish solid foundation with TypeScript, core UI components, and project structure.
+**Objective:** Development setup with real wallet connectivity and Aleo SDK integration from day one.
 
-**Track:** A (Frontend)
+**Theme:** Vertical foundation - both frontend and blockchain tooling ready
+
+---
+
+## Overview
+
+Wave 1 establishes the complete development foundation. Unlike traditional approaches that defer blockchain integration, we set up both frontend AND Aleo tooling immediately. This ensures the wallet adapter interface matches real Leo struct types.
 
 ---
 
 ## Deliverables
 
-### 1. TypeScript Setup
+### Layer: Contracts
 
-| File | Purpose |
-|------|---------|
-| `tsconfig.json` | TypeScript configuration |
-| `next-env.d.ts` | Next.js type declarations |
-| `types/index.ts` | Core type definitions & re-exports |
-| `types/policy.ts` | Policy-related types |
-| `types/claim.ts` | Claim-related types |
-| `types/pool.ts` | Liquidity pool types |
-| `types/user.ts` | User & wallet types |
-| `types/blockchain.ts` | Aleo blockchain types |
-| `types/oracle.ts` | Oracle data types |
+| Deliverable | Files | Purpose |
+|-------------|-------|---------|
+| Leo CLI setup | `contracts/README.md` | Install and configure Leo development environment |
+| Project structure | `contracts/` directory | Scaffold contract folders |
+| Shared types | `contracts/types/` | Common type definitions matching frontend |
 
-### 2. shadcn/ui Components (Core)
+```bash
+# Install Leo CLI
+curl -sSf https://install.leo.build/ | sh
+
+# Verify installation
+leo --version
+
+# Create contracts directory structure
+contracts/
+├── README.md
+├── types/
+│   └── common.leo      # Shared types (PolicyStatus, CoverageType, etc.)
+├── attestation_registry/
+├── oracle_bridge/
+├── risk_pool/
+├── policy_registry/
+├── claims_engine/
+└── governance/
+```
+
+### Layer: Frontend
+
+| Deliverable | Files | Purpose |
+|-------------|-------|---------|
+| TypeScript setup | `tsconfig.json`, `next-env.d.ts` | Full TypeScript configuration |
+| Core types | `types/*.ts` | Type definitions matching Leo structs |
+| shadcn/ui (core) | `components/ui/` | 16 core components |
+| Layout components | `components/layout/` | RootLayout, Header, Footer, MobileNav |
+| Common components | `components/common/` | Logo, Loading, ErrorBoundary |
+| Mock wallet | `lib/wallet/mock-wallet.ts` | Development wallet for testing |
+| Aleo SDK setup | `lib/aleo/` | SDK initialization and helpers |
+
+#### TypeScript Types (matching Leo structs)
+
+```typescript
+// types/blockchain.ts - Must match Leo types exactly
+export type CoverageType = 'flight_delay' | 'weather_event' | 'auto_collision' | 'health_basic';
+export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'claimed';
+
+// These map to Leo u8 values:
+// COVERAGE_FLIGHT_DELAY: u8 = 1u8
+// COVERAGE_WEATHER_EVENT: u8 = 2u8
+export const COVERAGE_TYPE_MAP = {
+  flight_delay: 1,
+  weather_event: 2,
+  auto_collision: 3,
+  health_basic: 4,
+} as const;
+```
+
+#### shadcn/ui Components
 
 ```bash
 npx shadcn@latest add button card badge avatar input label textarea
@@ -30,7 +80,7 @@ npx shadcn@latest add tabs dialog alert alert-dialog skeleton
 npx shadcn@latest add dropdown-menu separator scroll-area tooltip
 ```
 
-**Components to install:**
+**Components (16 total):**
 - `button` - Primary action component
 - `card` - Content containers
 - `badge` - Status indicators
@@ -48,107 +98,166 @@ npx shadcn@latest add dropdown-menu separator scroll-area tooltip
 - `scroll-area` - Scrollable containers
 - `tooltip` - Hover tooltips
 
-### 3. Project Structure
+### Layer: Integration
 
-Create directories:
-```
-components/
-├── layout/          # RootLayout, Header, Footer, MobileNav
-├── common/          # Logo, Loading, ErrorBoundary
-└── ui/              # shadcn/ui components (auto-generated)
+| Deliverable | Files | Purpose |
+|-------------|-------|---------|
+| Wallet adapter interface | `lib/wallet/adapter.ts` | Unified interface for all wallets |
+| Type definitions | `types/blockchain.ts` | Types matching Leo struct definitions |
+| Aleo client | `lib/aleo/client.ts` | Network client initialization |
 
-hooks/               # Custom React hooks
-stores/              # Zustand stores (placeholder)
-lib/
-├── constants.ts     # App-wide constants
-└── config.ts        # Environment configuration
-```
+#### Wallet Adapter Interface
 
-### 4. Layout Components
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `RootLayout` | `components/layout/root-layout.tsx` | App shell with header/footer |
-| `Header` | `components/layout/header.tsx` | Top navigation bar |
-| `Footer` | `components/layout/footer.tsx` | Site footer |
-| `MobileNav` | `components/layout/mobile-nav.tsx` | Mobile navigation menu |
-
-### 5. Common Components
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `Logo` | `components/common/logo.tsx` | ZKLAIM logo |
-| `Loading` | `components/common/loading.tsx` | Loading spinner/skeleton |
-| `ErrorBoundary` | `components/common/error-boundary.tsx` | Error handling wrapper |
-
-### 6. File Conversions
-
-Convert existing JavaScript files to TypeScript:
-- `pages/_app.js` → `pages/_app.tsx`
-- `pages/_document.js` → `pages/_document.tsx`
-- `pages/index.js` → `pages/index.tsx`
-- `pages/api/hello.js` → `pages/api/hello.ts`
-- `lib/utils.js` → `lib/utils.ts`
-
----
-
-## Type Definitions Overview
-
-### Core Types (`types/index.ts`)
 ```typescript
-// API response wrapper
-interface ApiResponse<T> { success, data, error, meta }
+// lib/wallet/adapter.ts
+export interface WalletAdapter {
+  name: string;
+  icon: string;
 
-// Pagination
-interface PaginationParams { page, pageSize, sortBy, sortOrder }
+  // Connection
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  isConnected(): boolean;
 
-// Base model with timestamps
-interface BaseModel { id, createdAt, updatedAt }
+  // Account
+  getAddress(): Promise<string>;
+  getViewKey(): Promise<string>;
+  getBalance(): Promise<bigint>;
 
-// Async operation status
-type AsyncStatus = 'idle' | 'loading' | 'success' | 'error'
+  // Signing
+  signMessage(message: string): Promise<string>;
+
+  // Events
+  on(event: WalletEvent, callback: () => void): void;
+  off(event: WalletEvent, callback: () => void): void;
+}
+
+export type WalletEvent = 'connect' | 'disconnect' | 'accountChange';
 ```
 
-### Policy Types (`types/policy.ts`)
-```typescript
-type CoverageType = 'flight_delay' | 'weather_event' | 'auto_collision' | 'health_basic'
-type PolicyStatus = 'draft' | 'pending_proof' | 'active' | 'expired' | 'claimed'
+#### Mock Wallet (for development)
 
-interface Policy { id, userId, coverageType, coverageAmount, status, ... }
-interface FlightCoverage { flightNumber, airports, delayThreshold, payoutTiers }
-interface WeatherCoverage { location, eventType, threshold, payoutTiers }
-interface PremiumQuote { basePremium, adjustments, totalPremium, validUntil }
+```typescript
+// lib/wallet/mock-wallet.ts
+export class MockWallet implements WalletAdapter {
+  name = 'Mock Wallet';
+  icon = '/icons/mock-wallet.svg';
+
+  private address: string | null = null;
+  private connected = false;
+
+  async connect() {
+    await delay(1000); // Simulate network
+    this.address = 'aleo1mock' + generateRandomHex(58);
+    this.connected = true;
+  }
+
+  async getBalance() {
+    return BigInt(1_000_000_000); // 1000 Aleo (mock)
+  }
+
+  // ... implement other methods
+}
 ```
 
-### Claim Types (`types/claim.ts`)
+#### Aleo SDK Setup
+
 ```typescript
-type ClaimStatus = 'submitted' | 'validating' | 'approved' | 'rejected' | 'paid'
-type ClaimType = 'parametric' | 'traditional'
+// lib/aleo/client.ts
+import { AleoNetworkClient } from '@aleohq/sdk';
 
-interface Claim { id, policyId, type, status, amount, evidence, ... }
-interface OracleData { source, timestamp, data, signature }
-```
+const TESTNET_URL = 'https://api.explorer.aleo.org/v1/testnet3';
 
-### Pool Types (`types/pool.ts`)
-```typescript
-type PoolStatus = 'active' | 'paused' | 'deprecated'
+export const aleoClient = new AleoNetworkClient(TESTNET_URL);
 
-interface Pool { id, name, coverageTypes, tvl, utilizationRate, ... }
-interface PoolPosition { id, poolId, userId, depositAmount, lpTokens, ... }
-interface PoolStats { tvl, apy, utilizationRate, totalPolicies, ... }
+export async function getLatestBlock() {
+  return await aleoClient.getLatestBlock();
+}
+
+export async function getAccountBalance(address: string) {
+  return await aleoClient.getAccount(address);
+}
 ```
 
 ---
 
-## Testing Checklist
+## Project Structure
 
-- [ ] TypeScript compiles without errors (`npm run build`)
-- [ ] All shadcn components render correctly
-- [ ] `npm run lint` passes
-- [ ] Path aliases work (`@/` imports)
-- [ ] Layout components display properly
-- [ ] Dark mode toggle works
-- [ ] Mobile responsive layout
+```
+zklaim/
+├── contracts/                 # Leo smart contracts
+│   ├── README.md
+│   └── types/
+│       └── common.leo
+├── pages/
+│   ├── _app.tsx
+│   ├── _document.tsx
+│   └── index.tsx
+├── components/
+│   ├── layout/
+│   │   ├── root-layout.tsx
+│   │   ├── header.tsx
+│   │   ├── footer.tsx
+│   │   └── mobile-nav.tsx
+│   ├── common/
+│   │   ├── logo.tsx
+│   │   ├── loading.tsx
+│   │   └── error-boundary.tsx
+│   └── ui/                    # shadcn/ui (auto-generated)
+├── lib/
+│   ├── aleo/
+│   │   ├── client.ts
+│   │   └── types.ts
+│   ├── wallet/
+│   │   ├── adapter.ts
+│   │   ├── mock-wallet.ts
+│   │   └── index.ts
+│   ├── utils.ts
+│   ├── constants.ts
+│   └── config.ts
+├── types/
+│   ├── index.ts
+│   ├── blockchain.ts
+│   ├── policy.ts
+│   ├── claim.ts
+│   ├── pool.ts
+│   ├── user.ts
+│   └── oracle.ts
+└── styles/
+    └── globals.css
+```
+
+---
+
+## Testable Outcomes
+
+Wave 1 is testable when you can:
+
+1. **Connect mock wallet** - Click "Connect Wallet" button, see connection flow
+2. **Display address/balance** - After connection, see mock Aleo address and balance
+3. **Ping testnet** - Verify Aleo SDK can fetch latest block from testnet
+4. **Leo CLI works** - Run `leo --version` successfully
+
+### Manual Test Script
+
+```bash
+# 1. Start dev server
+npm run dev
+
+# 2. Open http://localhost:3000
+# 3. Click "Connect Wallet"
+# 4. Verify mock wallet connects
+# 5. Verify address displays (aleo1mock...)
+# 6. Verify balance displays (1000 ALEO)
+
+# 7. Test Aleo SDK (in browser console)
+# await fetch('/api/aleo/health').then(r => r.json())
+# Should return { connected: true, latestBlock: ... }
+
+# 8. Test Leo CLI
+leo --version
+# Should output version number
+```
 
 ---
 
@@ -158,10 +267,16 @@ interface PoolStats { tvl, apy, utilizationRate, totalPolicies, ... }
 # Install TypeScript
 npm install --save-dev typescript @types/react @types/node @types/react-dom
 
+# Install Aleo SDK
+npm install @aleohq/sdk
+
 # Install shadcn components
 npx shadcn@latest add button card badge avatar input label textarea
 npx shadcn@latest add tabs dialog alert alert-dialog skeleton
 npx shadcn@latest add dropdown-menu separator scroll-area tooltip
+
+# Install Leo CLI
+curl -sSf https://install.leo.build/ | sh
 
 # Verify build
 npm run build
@@ -174,6 +289,9 @@ npm run lint
 
 ```json
 {
+  "dependencies": {
+    "@aleohq/sdk": "^0.x"
+  },
   "devDependencies": {
     "typescript": "^5.x",
     "@types/react": "^19.x",
@@ -188,9 +306,26 @@ npm run lint
 ## Exit Criteria
 
 Wave 1 is complete when:
-1. All files converted to TypeScript
-2. No TypeScript compilation errors
-3. All 16 shadcn components installed
-4. Layout components (Header, Footer, RootLayout) working
-5. Project structure matches specification
-6. Lint passes with no errors
+
+| # | Criteria | Verification |
+|---|----------|--------------|
+| 1 | TypeScript compiles | `npm run build` succeeds |
+| 2 | 16 shadcn components installed | All render correctly |
+| 3 | Layout components working | Header, Footer, RootLayout display |
+| 4 | Mock wallet connects | Click connect, see address |
+| 5 | Balance displays | Mock balance shows after connect |
+| 6 | Aleo SDK pings testnet | `/api/aleo/health` returns latest block |
+| 7 | Leo CLI installed | `leo --version` works |
+| 8 | Project structure matches spec | All directories exist |
+| 9 | Types match Leo structs | CoverageType, PolicyStatus defined |
+| 10 | Lint passes | `npm run lint` no errors |
+
+---
+
+## Next Wave Preview
+
+**Wave 2: Attestation Registry** will build on this foundation:
+- Deploy first real contract (`attestation_registry.aleo`)
+- Create attestation viewer component
+- First real contract call from frontend
+- Full integration test: request attestation → on-chain record → view in dashboard
