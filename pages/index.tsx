@@ -14,7 +14,6 @@ import {
 // MagicUI animated components
 import { GridPattern } from '@/components/ui/grid-pattern';
 import { BlurFade } from '@/components/ui/blur-fade';
-import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { MagicCard } from '@/components/ui/magic-card';
 
 // Load Geist fonts
