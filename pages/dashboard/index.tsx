@@ -22,6 +22,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
+import { config } from '@/lib/config';
 
 export default function DashboardPage() {
   const { publicKey, connected, connecting } = useWallet();
@@ -103,7 +104,7 @@ export default function DashboardPage() {
                         )}
                       </Button>
                       <a
-                        href={`https://explorer.aleo.org/address/${publicKey}`}
+                        href={`${config.aleoExplorerUrl}/address/${publicKey}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

@@ -8,6 +8,8 @@
 import { useState, useCallback } from 'react';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
 import { useWalletModal } from '@demox-labs/aleo-wallet-adapter-reactui';
+import { FOUNDATION_PROGRAM_ID } from '@/lib/aleo/foundation';
+import { config } from '@/lib/config';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -38,7 +40,7 @@ type RegistrationStatus =
   | 'error';
 
 export function UserRegistration() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, requestTransaction } = useWallet();
   const { setVisible } = useWalletModal();
   const [status, setStatus] = useState<RegistrationStatus>('unknown');
   const [txId, setTxId] = useState<string | null>(null);
@@ -53,38 +55,75 @@ export function UserRegistration() {
       return;
     }
 
+    if (!requestTransaction) {
+      setError('Wallet does not support transactions. Please use Leo Wallet.');
+      setStatus('error');
+      return;
+    }
+
     setStatus('registering');
     setError(null);
     setTxId(null);
 
     try {
-      // Note: The contract must be deployed to testnet before this will work
-      // For now, simulate the registration process
+      // Build the transaction request
+      const txRequest = {
+        address: publicKey,
+        chainId: 'testnetbeta',
+        transitions: [
+          {
+            program: FOUNDATION_PROGRAM_ID,
+            functionName: 'register_user',
+            inputs: [], // register_user takes no inputs
+          },
+        ],
+        fee: 500000, // 0.5 credits in microcredits (async functions need more)
+        feePrivate: false,
+      };
 
-      // In production, this would call:
-      // const result = await requestTransaction?.({...transaction});
+      console.log('📤 Sending transaction request:', JSON.stringify(txRequest, null, 2));
 
-      // Simulate a transaction for demo purposes
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Call the real register_user function on the deployed contract
+      const result = await requestTransaction(txRequest);
 
-      // Generate a mock transaction ID
-      const mockTxId = `at1${Array.from({ length: 62 }, () =>
-        '0123456789abcdef'[Math.floor(Math.random() * 16)]
-      ).join('')}`;
+      console.log('📥 Transaction result type:', typeof result);
+      console.log('📥 Transaction result:', result);
+      console.log('📥 Transaction result (stringified):', JSON.stringify(result, null, 2));
 
-      setTxId(mockTxId);
-      setStatus('registered');
+      // Extract transaction ID from result
+      if (result) {
+        // The result might be an object with transactionId or just a string
+        let transactionId: string;
+        if (typeof result === 'string') {
+          transactionId = result;
+        } else if (typeof result === 'object' && result !== null) {
+          // Try common property names for transaction ID
+          transactionId = (result as Record<string, unknown>).transactionId as string
+            || (result as Record<string, unknown>).txId as string
+            || (result as Record<string, unknown>).id as string
+            || (result as Record<string, unknown>).transaction as string
+            || JSON.stringify(result);
+          console.log('📥 Extracted transaction ID:', transactionId);
+        } else {
+          transactionId = String(result);
+        }
 
-      // Show success message
-      setError(null);
+        setTxId(transactionId);
+        setStatus('registered');
+        console.log('✅ Registration successful! TX ID:', transactionId);
+      } else {
+        throw new Error('No transaction ID returned');
+      }
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error('❌ Registration error:', err);
+      console.error('❌ Error type:', typeof err);
+      console.error('❌ Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err as object), 2));
       setStatus('error');
       setError(
         err instanceof Error ? err.message : 'Registration failed. Please try again.'
       );
     }
-  }, [connected, publicKey, setVisible]);
+  }, [connected, publicKey, requestTransaction, setVisible]);
 
   /**
    * Simulate checking registration status
@@ -125,9 +164,9 @@ export function UserRegistration() {
         );
       case 'registered':
         return (
-          <Badge variant="secondary" className="text-amber-600 dark:text-amber-400">
+          <Badge variant="default">
             <CheckCircle className="mr-1 h-3 w-3" />
-            Registered (Simulated)
+            Registered
           </Badge>
         );
       case 'not_registered':
@@ -245,19 +284,21 @@ export function UserRegistration() {
           )}
         </div>
 
-        {/* Transaction ID (Simulated) */}
+        {/* Transaction ID */}
         {txId && (
           <div className="rounded-md bg-muted p-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Transaction ID</span>
-              <Badge variant="outline" className="text-xs text-amber-600 dark:text-amber-400 border-amber-500/50">
-                Simulated
-              </Badge>
+              <a
+                href={`${config.aleoExplorerUrl}/transaction/${txId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                View <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
             <code className="mt-1 block truncate text-xs">{txId}</code>
-            <p className="mt-2 text-xs text-muted-foreground italic">
-              This is a simulated transaction. The contract is not yet deployed to testnet.
-            </p>
           </div>
         )}
 
@@ -268,18 +309,10 @@ export function UserRegistration() {
           </div>
         )}
 
-        {/* Demo mode notice */}
-        <div className="rounded-md bg-amber-500/10 border border-amber-500/20 p-3">
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            <strong>Demo Mode:</strong> The zklaim_foundation contract is not yet deployed to testnet.
-            Registration is simulated for demonstration purposes.
-          </p>
-        </div>
-
         {/* Info box */}
-        <div className="rounded-md bg-blue-500/10 p-3">
-          <p className="text-xs text-blue-600 dark:text-blue-400">
-            <strong>Note:</strong> Once deployed, registration will require a small transaction fee.
+        <div className="rounded-md bg-primary/10 p-3">
+          <p className="text-xs text-primary">
+            <strong>Note:</strong> Registration requires a small transaction fee (~0.1 credits).
             Make sure you have testnet credits in your wallet.
           </p>
         </div>

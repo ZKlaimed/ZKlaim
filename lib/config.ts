@@ -16,6 +16,7 @@ interface Config {
   // Blockchain
   aleoNetwork: 'mainnet' | 'testnet' | 'devnet';
   aleoRpcUrl: string;
+  aleoExplorerUrl: string;
 
   // Feature flags
   features: {
@@ -41,6 +42,7 @@ function getConfig(): Config {
 
     aleoNetwork: (process.env.NEXT_PUBLIC_ALEO_NETWORK as Config['aleoNetwork']) || 'testnet',
     aleoRpcUrl: process.env.NEXT_PUBLIC_ALEO_RPC_URL || 'https://api.explorer.aleo.org/v1',
+    aleoExplorerUrl: process.env.NEXT_PUBLIC_ALEO_EXPLORER_URL || 'https://testnet.explorer.provable.com',
 
     features: {
       autoInsurance: process.env.NEXT_PUBLIC_FEATURE_AUTO === 'true',
