@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -11,19 +12,14 @@ interface LogoProps {
   className?: string;
 }
 
-// Size mappings for the logo
-const sizeClasses = {
-  sm: 'h-6',   // 24px
-  md: 'h-8',   // 32px (default)
-  lg: 'h-12', // 48px
+// Size mappings for the logo image (width x height in pixels)
+const imageSizeMap = {
+  sm: { width: 24, height: 24 },
+  md: { width: 32, height: 32 },
+  lg: { width: 48, height: 48 },
 };
 
-const iconSizeClasses = {
-  sm: 'h-6 w-6',
-  md: 'h-8 w-8',
-  lg: 'h-12 w-12',
-};
-
+// Text size classes for the wordmark
 const textSizeClasses = {
   sm: 'text-lg',
   md: 'text-xl',
@@ -32,37 +28,23 @@ const textSizeClasses = {
 
 /**
  * Logo Component
- * ZKLAIM brand mark with shield icon and wordmark
- * Conveys privacy, security, and zero-knowledge technology
+ * ZKLAIM brand mark using the official logo.jpeg
+ * Displays the logo image with optional wordmark text
  */
 export function Logo({ iconOnly = false, size = 'md', className }: LogoProps) {
+  const { width, height } = imageSizeMap[size];
+
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      {/* Shield icon with ZK */}
-      <div
-        className={cn(
-          'relative flex items-center justify-center rounded-lg bg-primary text-primary-foreground',
-          iconSizeClasses[size]
-        )}
-      >
-        {/* Shield shape */}
-        <svg
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className={cn('absolute', iconSizeClasses[size])}
-        >
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-        {/* ZK text overlay */}
-        <span
-          className={cn(
-            'relative z-10 font-bold text-background',
-            size === 'sm' ? 'text-[8px]' : size === 'md' ? 'text-[10px]' : 'text-sm'
-          )}
-        >
-          ZK
-        </span>
-      </div>
+      {/* Logo image from /public/logo.jpeg */}
+      <Image
+        src="/logo.jpeg"
+        alt="ZKLAIM Logo"
+        width={width}
+        height={height}
+        className="rounded-md object-contain"
+        priority
+      />
 
       {/* Wordmark */}
       {!iconOnly && (
@@ -72,12 +54,12 @@ export function Logo({ iconOnly = false, size = 'md', className }: LogoProps) {
             textSizeClasses[size]
           )}
         >
-          ZKLAIM
+          ZKlaim
         </span>
       )}
 
       {/* Screen reader text for icon-only variant */}
-      {iconOnly && <span className="sr-only">ZKLAIM</span>}
+      {iconOnly && <span className="sr-only">ZKlaim</span>}
     </div>
   );
 }

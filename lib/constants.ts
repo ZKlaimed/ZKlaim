@@ -4,7 +4,7 @@
  */
 
 // Site metadata
-export const SITE_NAME = 'ZKLAIM';
+export const SITE_NAME = 'ZKlaim';
 export const SITE_DESCRIPTION = 'Privacy-preserving insurance on Aleo blockchain';
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://zklaim.io';
 
