@@ -2,9 +2,10 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { X, ChevronRight, ExternalLink, Wallet, Sun, Moon, Shield } from 'lucide-react';
+import { ChevronRight, ExternalLink, Sun, Moon, Shield } from 'lucide-react';
 import { Logo } from '@/components/common/logo';
 import { Button } from '@/components/ui/button';
+import { WalletButton } from '@/components/wallet/wallet-button';
 import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
@@ -124,10 +125,7 @@ export function MobileNav({ open, onClose, theme, onThemeToggle }: MobileNavProp
           <Separator className="my-2" />
 
           {/* Connect Wallet Button */}
-          <Button className="mt-2 w-full gap-2" size="lg">
-            <Wallet className="h-5 w-5" />
-            Connect Wallet
-          </Button>
+          <WalletButton className="mt-2" size="lg" fullWidth />
 
           {/* Theme toggle */}
           <Button

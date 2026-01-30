@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, ChevronDown, Wallet, Shield, ExternalLink, Sun, Moon } from 'lucide-react';
+import { Menu, ChevronDown, ExternalLink, Sun, Moon } from 'lucide-react';
 import { Logo } from '@/components/common/logo';
 import { Button } from '@/components/ui/button';
+import { WalletButton } from '@/components/wallet/wallet-button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,10 +122,7 @@ export function Header() {
             </Button>
 
             {/* Connect Wallet Button - Desktop */}
-            <Button className="hidden gap-2 md:flex">
-              <Wallet className="h-4 w-4" />
-              Connect Wallet
-            </Button>
+            <WalletButton className="hidden md:flex" />
 
             {/* Mobile menu button */}
             <Button
