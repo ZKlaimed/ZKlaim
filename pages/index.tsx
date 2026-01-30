@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 // MagicUI animated components
-import { DotPattern } from '@/components/ui/dot-pattern';
+import { GridPattern } from '@/components/ui/grid-pattern';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { MagicCard } from '@/components/ui/magic-card';
@@ -88,19 +88,25 @@ export default function Home() {
       <RootLayout>
         {/* Hero Section */}
         <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-4 text-center">
-          {/* Background: DotPattern with radial fade mask */}
-          <DotPattern
-            width={20}
-            height={20}
-            cx={1}
-            cy={1}
-            cr={1}
-            className="absolute inset-0 -z-10 fill-neutral-400/50 [mask-image:radial-gradient(ellipse_at_center,white,transparent_70%)]"
+          {/* Background: GridPattern with highlighted squares */}
+          <GridPattern
+            width={40}
+            height={40}
+            x={-1}
+            y={-1}
+            strokeDasharray="0"
+            squares={[
+              [4, 4], [5, 1], [8, 2], [6, 6], [10, 5], [13, 3],
+              [2, 8], [7, 9], [15, 7], [12, 10], [3, 12], [9, 11],
+              [16, 4], [14, 8], [1, 5], [11, 2], [17, 9], [4, 10],
+            ]}
+            className="absolute inset-0 -z-10 h-full w-full fill-primary/[0.03] stroke-white/[0.05] dark:fill-primary/[0.08] dark:stroke-white/[0.08] [mask-image:radial-gradient(600px_circle_at_center,white,transparent)]"
           />
 
           {/* Gradient blobs for visual depth */}
-          <div className="absolute left-0 top-0 -z-10 h-[310px] w-[310px] rounded-full bg-primary/20 blur-[100px]"></div>
-          <div className="absolute right-0 bottom-0 -z-10 h-[310px] w-[310px] rounded-full bg-accent/20 blur-[100px]"></div>
+          <div className="absolute left-1/4 top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-primary/30 blur-[120px]"></div>
+          <div className="absolute right-1/4 bottom-1/4 -z-10 h-[350px] w-[350px] rounded-full bg-accent/25 blur-[100px]"></div>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[150px]"></div>
 
           {/* Hero content with staggered BlurFade animations */}
           <BlurFade delay={0.1} direction="up">
