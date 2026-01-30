@@ -1,0 +1,6 @@
+{
+  "program": "zklaim_foundation.aleo",
+  "version": "0.1.0",
+  "description": "ZKLAIM Foundation Contract - Protocol initialization and utilities",
+  "license": "MIT"
+}
