@@ -36,10 +36,13 @@
 
 ### On-Chain State
 
-| Mapping | Current Value | Description |
-|---------|---------------|-------------|
-| `user_count[0u8]` | `1u64` | Total registered users |
-| `protocol_version[0u8]` | `10000u32` | Protocol v1.0 |
+| Mapping | Key | Value | Description |
+|---------|-----|-------|-------------|
+| `user_count` | `0u8` | `1u64` | Total registered users |
+| `protocol_version` | `0u8` | `10000u32` | Protocol v1.0 |
+| `registered_users` | `7742...438field` | `true` | Owner address registration |
+
+> **Note:** The `registered_users` mapping key is `BHP256::hash_to_field(address)`. The full hash for the owner address is `7742581979524278179776757584548402241745684456075831949529846341127882516438field`.
 
 ---
 
@@ -59,7 +62,14 @@
 | Component | File | Purpose |
 |-----------|------|---------|
 | ProtocolStatus | `protocol-status.tsx` | Displays network/contract status |
-| UserRegistration | `user-registration.tsx` | On-chain user registration |
+| UserRegistration | `user-registration.tsx` | On-chain user registration with auto-verification |
+
+**UserRegistration Features:**
+- Auto-checks registration status on wallet connect (via BHP256 hash)
+- Caches verified status in localStorage for faster subsequent loads
+- Manual "Check Status" button for on-demand verification
+- "Recover Registration" option for users with existing registrations
+- Direct links to testnet explorer for transaction viewing
 
 #### UI Components (`components/ui/`)
 
@@ -90,8 +100,37 @@
 
 | Module | File | Purpose |
 |--------|------|---------|
-| Network Client | `lib/aleo/client.ts` | Aleo network connectivity |
+| Network Client | `lib/aleo/client.ts` | Aleo network connectivity + on-chain verification |
 | Foundation Helpers | `lib/aleo/foundation.ts` | Contract interaction functions |
+
+#### Client Functions (`lib/aleo/client.ts`)
+
+| Function | Purpose |
+|----------|---------|
+| `getMappingValue()` | Query any program mapping via REST API |
+| `getUserCount()` | Get total registered users from contract |
+| `hashAddressBHP256()` | Compute BHP256 hash of address locally via SDK |
+| `isUserRegistered()` | Verify user registration on-chain |
+
+#### On-Chain Registration Verification
+
+The contract stores registrations using `BHP256::hash_to_field(address)` as the mapping key. To verify registration client-side:
+
+```typescript
+// 1. Compute hash locally (same algorithm as on-chain)
+const hash = await hashAddressBHP256(address);
+// Result: "7742581979524278179776757584548402241745684456075831949529846341127882516438field"
+
+// 2. Query the registered_users mapping
+const value = await getMappingValue('zklaim_foundation.aleo', 'registered_users', hash);
+// Result: "true" if registered
+
+// 3. Combined helper function
+const isRegistered = await isUserRegistered(address);
+// Result: true
+```
+
+The hash computation runs a local Aleo program via `ProgramManager.run()` using WASM, ensuring the exact same hash algorithm as the on-chain contract.
 
 ---
 
@@ -221,7 +260,8 @@ $ curl "https://api.explorer.provable.com/v1/testnet/transaction/at1u8j6lxc7wdju
 | Latest block | ✅ Shows current block height |
 | Wallet connection | ✅ Leo Wallet connects |
 | User registration | ✅ Transaction submitted successfully |
-| Registration status | ✅ Shows "Registered" after tx |
+| Registration status | ✅ Auto-verifies on-chain via BHP256 hash |
+| Explorer links | ✅ Points to testnet.explorer.provable.com |
 
 ---
 
@@ -251,6 +291,30 @@ $ curl "https://api.explorer.provable.com/v1/testnet/transaction/at1u8j6lxc7wdju
 
 **Problem:** Wallet adapter peer dependency mismatch
 **Solution:** Added `.npmrc` with `legacy-peer-deps=true`
+
+### 6. On-Chain Registration Verification
+
+**Problem:** Could not verify if a specific user was registered on-chain. The contract stores registrations by `BHP256::hash_to_field(address)`, but we couldn't compute this hash client-side.
+
+**Solution:** Used `@provablehq/sdk` to run the hash computation locally:
+```typescript
+// Run a local program that computes the same hash as on-chain
+const HASH_PROGRAM = `program hash_address.aleo;
+function hash_addr:
+    input r0 as address.public;
+    hash.bhp256 r0 into r1 as field;
+    output r1 as field.public;
+`;
+
+const response = await programManager.run(HASH_PROGRAM, 'hash_addr', [address], false);
+const hash = response.getOutputs()[0];
+// Then query: registered_users[hash] → "true"
+```
+
+### 7. Explorer URLs for Testnet
+
+**Problem:** Explorer links pointed to mainnet (`explorer.aleo.org`)
+**Solution:** Updated all explorer URLs to testnet (`testnet.explorer.provable.com`) and added configurable `aleoExplorerUrl` in `lib/config.ts`
 
 ---
 
@@ -290,6 +354,21 @@ Wave 1 delivered a **complete vertical slice** from Day 1:
 - ✅ Real wallet integration (Leo Wallet)
 - ✅ On-chain user registration working
 - ✅ Full transaction flow: sign → submit → confirm → verify
-- ✅ 1 registered user on-chain
+- ✅ **Client-side on-chain verification** via BHP256 hash computation
+- ✅ 1 registered user on-chain (verified via mapping query)
 
 **The entire development-to-deployment pipeline is now validated and operational.**
+
+### Registered User Verification
+
+```bash
+# Address
+aleo1snsa07stztprxatn49ef62chplnewvrfjjasum6ne28fs7pq5qqs6j79nt
+
+# BHP256 hash (computed client-side, matches on-chain)
+7742581979524278179776757584548402241745684456075831949529846341127882516438field
+
+# On-chain mapping query
+$ curl "https://api.explorer.provable.com/v1/testnet/program/zklaim_foundation.aleo/mapping/registered_users/7742581979524278179776757584548402241745684456075831949529846341127882516438field"
+"true"
+```
