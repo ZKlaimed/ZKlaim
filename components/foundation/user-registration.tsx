@@ -2,10 +2,12 @@
 
 /**
  * User Registration Component
- * Allows users to register on-chain with the ZKLAIM protocol
+ * Allows users to register on-chain with the ZKlaim protocol
  */
 
 import { useState, useCallback } from 'react';
+import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
+import { useWalletModal } from '@demox-labs/aleo-wallet-adapter-reactui';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,81 +17,99 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useWalletStore } from '@/stores/wallet-store';
-import { registerUser, verifyUserRegistration } from '@/lib/aleo/foundation';
-import { UserPlus, CheckCircle, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
+import {
+  UserPlus,
+  CheckCircle,
+  Loader2,
+  AlertCircle,
+  ExternalLink,
+  Wallet,
+} from 'lucide-react';
 
 /**
  * Registration status
  */
-type RegistrationStatus = 'unknown' | 'checking' | 'registered' | 'not_registered' | 'registering' | 'error';
+type RegistrationStatus =
+  | 'unknown'
+  | 'checking'
+  | 'registered'
+  | 'not_registered'
+  | 'registering'
+  | 'error';
 
 export function UserRegistration() {
-  const { wallet, isConnected, address } = useWalletStore();
+  const { publicKey, connected } = useWallet();
+  const { setVisible } = useWalletModal();
   const [status, setStatus] = useState<RegistrationStatus>('unknown');
   const [txId, setTxId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Check if user is registered
-   */
-  const handleCheckRegistration = useCallback(async () => {
-    if (!wallet) return;
-
-    setStatus('checking');
-    setError(null);
-
-    try {
-      const result = await verifyUserRegistration(wallet);
-      setStatus(result.isRegistered ? 'registered' : 'not_registered');
-      if (result.error) {
-        setError(result.error);
-      }
-    } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Failed to check registration');
-    }
-  }, [wallet]);
-
-  /**
-   * Register user on-chain
+   * Register user on-chain by calling the contract
    */
   const handleRegister = useCallback(async () => {
-    if (!wallet) return;
+    if (!connected || !publicKey) {
+      setVisible(true);
+      return;
+    }
 
     setStatus('registering');
     setError(null);
     setTxId(null);
 
     try {
-      const result = await registerUser(wallet);
+      // Note: The contract must be deployed to testnet before this will work
+      // For now, simulate the registration process
 
-      if (result.success) {
-        setTxId(result.txId);
-        setStatus('registered');
-      } else {
-        setStatus('error');
-        setError(result.error ?? 'Registration failed');
-      }
+      // In production, this would call:
+      // const result = await requestTransaction?.({...transaction});
+
+      // Simulate a transaction for demo purposes
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Generate a mock transaction ID
+      const mockTxId = `at1${Array.from({ length: 62 }, () =>
+        '0123456789abcdef'[Math.floor(Math.random() * 16)]
+      ).join('')}`;
+
+      setTxId(mockTxId);
+      setStatus('registered');
+
+      // Show success message
+      setError(null);
+    } catch (err) {
+      console.error('Registration error:', err);
+      setStatus('error');
+      setError(
+        err instanceof Error ? err.message : 'Registration failed. Please try again.'
+      );
+    }
+  }, [connected, publicKey, setVisible]);
+
+  /**
+   * Simulate checking registration status
+   * In production, this would query the contract's registered_users mapping
+   */
+  const handleCheckStatus = useCallback(async () => {
+    if (!connected) {
+      setVisible(true);
+      return;
+    }
+
+    setStatus('checking');
+    setError(null);
+
+    try {
+      // Simulate checking - in production, query the contract
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // For now, we'll show as not registered since we can't query yet
+      setStatus('not_registered');
     } catch (err) {
       setStatus('error');
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError('Failed to check registration status');
     }
-  }, [wallet]);
-
-  // Not connected state
-  if (!isConnected) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-          <UserPlus className="mb-4 h-12 w-12 text-muted-foreground/50" />
-          <p className="text-muted-foreground">
-            Connect your wallet to register with the ZKlaim protocol
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  }, [connected, setVisible]);
 
   // Get status badge
   const getStatusBadge = () => {
@@ -105,9 +125,9 @@ export function UserRegistration() {
         );
       case 'registered':
         return (
-          <Badge variant="default">
+          <Badge variant="secondary" className="text-amber-600 dark:text-amber-400">
             <CheckCircle className="mr-1 h-3 w-3" />
-            Registered
+            Registered (Simulated)
           </Badge>
         );
       case 'not_registered':
@@ -133,6 +153,33 @@ export function UserRegistration() {
 
   const isLoading = status === 'checking' || status === 'registering';
 
+  // Not connected state
+  if (!connected) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-primary" />
+            User Registration
+          </CardTitle>
+          <CardDescription>
+            Register on-chain to use the ZKlaim protocol
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-6">
+          <Wallet className="mb-4 h-12 w-12 text-muted-foreground/50" />
+          <p className="mb-4 text-center text-muted-foreground">
+            Connect your wallet to register
+          </p>
+          <Button onClick={() => setVisible(true)}>
+            <Wallet className="mr-2 h-4 w-4" />
+            Connect Wallet
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -149,7 +196,7 @@ export function UserRegistration() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Address</span>
           <span className="font-mono text-xs">
-            {address ? `${address.slice(0, 10)}...${address.slice(-6)}` : 'N/A'}
+            {publicKey ? `${publicKey.slice(0, 10)}...${publicKey.slice(-6)}` : 'N/A'}
           </span>
         </div>
 
@@ -163,7 +210,7 @@ export function UserRegistration() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={handleCheckRegistration}
+            onClick={handleCheckStatus}
             disabled={isLoading}
             className="flex-1"
           >
@@ -198,23 +245,19 @@ export function UserRegistration() {
           )}
         </div>
 
-        {/* Transaction ID */}
+        {/* Transaction ID (Simulated) */}
         {txId && (
           <div className="rounded-md bg-muted p-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Transaction ID</span>
-              <a
-                href={`https://explorer.aleo.org/transaction/${txId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-primary hover:underline"
-              >
-                View <ExternalLink className="h-3 w-3" />
-              </a>
+              <Badge variant="outline" className="text-xs text-amber-600 dark:text-amber-400 border-amber-500/50">
+                Simulated
+              </Badge>
             </div>
-            <code className="mt-1 block truncate text-xs">
-              {txId}
-            </code>
+            <code className="mt-1 block truncate text-xs">{txId}</code>
+            <p className="mt-2 text-xs text-muted-foreground italic">
+              This is a simulated transaction. The contract is not yet deployed to testnet.
+            </p>
           </div>
         )}
 
@@ -224,6 +267,22 @@ export function UserRegistration() {
             <p className="text-xs text-destructive">{error}</p>
           </div>
         )}
+
+        {/* Demo mode notice */}
+        <div className="rounded-md bg-amber-500/10 border border-amber-500/20 p-3">
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            <strong>Demo Mode:</strong> The zklaim_foundation contract is not yet deployed to testnet.
+            Registration is simulated for demonstration purposes.
+          </p>
+        </div>
+
+        {/* Info box */}
+        <div className="rounded-md bg-blue-500/10 p-3">
+          <p className="text-xs text-blue-600 dark:text-blue-400">
+            <strong>Note:</strong> Once deployed, registration will require a small transaction fee.
+            Make sure you have testnet credits in your wallet.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
