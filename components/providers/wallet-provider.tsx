@@ -7,12 +7,7 @@ import {
   DecryptPermission,
   WalletAdapterNetwork,
 } from '@demox-labs/aleo-wallet-adapter-base';
-import {
-  LeoWalletAdapter,
-  PuzzleWalletAdapter,
-  FoxWalletAdapter,
-  SoterWalletAdapter,
-} from 'aleo-adapters';
+import { LeoWalletAdapter } from '@demox-labs/aleo-wallet-adapter-leo';
 
 // Import the wallet adapter UI styles
 import '@demox-labs/aleo-wallet-adapter-reactui/dist/styles.css';
@@ -20,19 +15,14 @@ import '@demox-labs/aleo-wallet-adapter-reactui/dist/styles.css';
 /**
  * AleoWalletProvider
  * Wraps the application with Aleo wallet connection context.
- * Supports Leo, Puzzle, Fox, and Soter wallets.
+ * Currently supports Leo Wallet (most widely used Aleo wallet).
+ * Additional wallets can be added as their adapters become available.
  */
 export function AleoWalletProvider({ children }: { children: React.ReactNode }) {
   // Initialize wallet adapters - memoized to prevent recreation on every render
+  // Leo Wallet is the primary Aleo wallet
   const wallets = useMemo(() => [
     new LeoWalletAdapter({ appName: 'ZKLAIM' }),
-    new PuzzleWalletAdapter({
-      programIdPermissions: { [WalletAdapterNetwork.TestnetBeta]: [] },
-      appName: 'ZKLAIM',
-      appDescription: 'Privacy-preserving insurance on Aleo',
-    }),
-    new FoxWalletAdapter({ appName: 'ZKLAIM' }),
-    new SoterWalletAdapter({ appName: 'ZKLAIM' }),
   ], []);
 
   return (
