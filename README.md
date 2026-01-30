@@ -1,4 +1,4 @@
-# ZKLAIM
+# ZKlaim
 
 **Privacy-Preserving Insurance on Aleo**
 
