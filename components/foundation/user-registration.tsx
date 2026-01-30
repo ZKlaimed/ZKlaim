@@ -20,6 +20,16 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import {
   UserPlus,
@@ -29,10 +39,29 @@ import {
   ExternalLink,
   Wallet,
   History,
+  Clock,
 } from 'lucide-react';
 
-// LocalStorage key for caching registration status
+// LocalStorage keys for caching
 const REGISTRATION_CACHE_KEY = 'zklaim_registration_status';
+const HASH_CACHE_KEY = 'zklaim_address_hashes';
+
+/**
+ * Check if we have a cached hash for the address
+ */
+function hasHashCached(address: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const cached = localStorage.getItem(HASH_CACHE_KEY);
+    if (cached) {
+      const hashes = JSON.parse(cached);
+      return !!hashes[address];
+    }
+  } catch {
+    // Ignore errors
+  }
+  return false;
+}
 
 /**
  * Registration status
@@ -53,60 +82,72 @@ export function UserRegistration() {
   const [error, setError] = useState<string | null>(null);
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryTxId, setRecoveryTxId] = useState('');
+  const [showHashWarning, setShowHashWarning] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'check' | 'mount' | null>(null);
+
+  /**
+   * Actually perform the on-chain verification
+   */
+  const performOnChainCheck = useCallback(async () => {
+    if (!publicKey) return;
+
+    try {
+      setStatus('checking');
+      const registered = await isUserRegistered(publicKey);
+      if (registered) {
+        setStatus('registered');
+        // Cache the verified status
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(REGISTRATION_CACHE_KEY, JSON.stringify({
+            address: publicKey,
+            registered: true,
+            timestamp: Date.now(),
+          }));
+        }
+      } else {
+        setStatus('not_registered');
+      }
+    } catch (e) {
+      console.error('Failed to verify registration on-chain:', e);
+      setStatus('unknown');
+    }
+  }, [publicKey]);
 
   /**
    * Check registration status on mount when wallet is connected
-   * First checks localStorage cache, then verifies on-chain
+   * First checks localStorage cache, then shows dialog if hash needs computing
    */
   useEffect(() => {
     if (!publicKey) return;
 
-    const checkRegistration = async () => {
-      // First, check localStorage cache for quick display
-      if (typeof window !== 'undefined') {
-        try {
-          const cached = localStorage.getItem(REGISTRATION_CACHE_KEY);
-          if (cached) {
-            const data = JSON.parse(cached);
-            if (data.address === publicKey && data.registered) {
-              setStatus('registered');
-              if (data.txId) {
-                setTxId(data.txId);
-              }
-              return; // Use cached status
-            }
-          }
-        } catch (e) {
-          console.error('Failed to load cached registration status:', e);
-        }
-      }
-
-      // If no cache or cache miss, verify on-chain
-      // Note: This runs the hash computation which takes a few seconds
+    // First, check localStorage cache for quick display
+    if (typeof window !== 'undefined') {
       try {
-        setStatus('checking');
-        const registered = await isUserRegistered(publicKey);
-        if (registered) {
-          setStatus('registered');
-          // Cache the verified status
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(REGISTRATION_CACHE_KEY, JSON.stringify({
-              address: publicKey,
-              registered: true,
-              timestamp: Date.now(),
-            }));
+        const cached = localStorage.getItem(REGISTRATION_CACHE_KEY);
+        if (cached) {
+          const data = JSON.parse(cached);
+          if (data.address === publicKey && data.registered) {
+            setStatus('registered');
+            if (data.txId) {
+              setTxId(data.txId);
+            }
+            return; // Use cached status
           }
-        } else {
-          setStatus('not_registered');
         }
       } catch (e) {
-        console.error('Failed to verify registration on-chain:', e);
-        setStatus('unknown');
+        console.error('Failed to load cached registration status:', e);
       }
-    };
+    }
 
-    checkRegistration();
-  }, [publicKey]);
+    // Check if we have a cached hash - if so, we can check instantly
+    if (hasHashCached(publicKey)) {
+      performOnChainCheck();
+    } else {
+      // No cached hash - show warning dialog before computing
+      setPendingAction('mount');
+      setShowHashWarning(true);
+    }
+  }, [publicKey, performOnChainCheck]);
 
   /**
    * Save registration status to localStorage
@@ -209,52 +250,43 @@ export function UserRegistration() {
 
   /**
    * Check registration status
-   * Verifies on-chain by computing the BHP256 hash of the address and querying the mapping
+   * Shows warning dialog if hash needs to be computed, otherwise checks instantly
    */
-  const handleCheckStatus = useCallback(async () => {
+  const handleCheckStatus = useCallback(() => {
     if (!connected || !publicKey) {
       setVisible(true);
       return;
     }
 
-    setStatus('checking');
     setError(null);
 
-    try {
-      // Query on-chain registration status using BHP256 hash
-      console.log('🔍 Checking on-chain registration for:', publicKey);
-      const registered = await isUserRegistered(publicKey);
-      console.log('📊 On-chain registration status:', registered);
-
-      if (registered) {
-        setStatus('registered');
-        // Try to load cached txId if available
-        if (typeof window !== 'undefined') {
-          const cached = localStorage.getItem(REGISTRATION_CACHE_KEY);
-          if (cached) {
-            const data = JSON.parse(cached);
-            if (data.address === publicKey && data.txId) {
-              setTxId(data.txId);
-            }
-          }
-        }
-        // Also cache the status for faster future lookups
-        if (typeof window !== 'undefined' && !txId) {
-          localStorage.setItem(REGISTRATION_CACHE_KEY, JSON.stringify({
-            address: publicKey,
-            registered: true,
-            timestamp: Date.now(),
-          }));
-        }
-      } else {
-        setStatus('not_registered');
-      }
-    } catch (err) {
-      console.error('Failed to check registration status:', err);
-      setStatus('error');
-      setError('Failed to check registration status. Please try again.');
+    // Check if we have a cached hash - if so, we can check instantly
+    if (hasHashCached(publicKey)) {
+      performOnChainCheck();
+    } else {
+      // No cached hash - show warning dialog before computing
+      setPendingAction('check');
+      setShowHashWarning(true);
     }
-  }, [connected, publicKey, setVisible, txId]);
+  }, [connected, publicKey, setVisible, performOnChainCheck]);
+
+  /**
+   * Handle dialog confirmation - proceed with hash computation
+   */
+  const handleHashWarningConfirm = useCallback(() => {
+    setShowHashWarning(false);
+    setPendingAction(null);
+    performOnChainCheck();
+  }, [performOnChainCheck]);
+
+  /**
+   * Handle dialog cancellation
+   */
+  const handleHashWarningCancel = useCallback(() => {
+    setShowHashWarning(false);
+    setPendingAction(null);
+    // Keep status as unknown if cancelled on mount
+  }, []);
 
   /**
    * Recover registration by providing a transaction ID
@@ -352,17 +384,50 @@ export function UserRegistration() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserPlus className="h-5 w-5 text-primary" />
-          User Registration
-        </CardTitle>
-        <CardDescription>
-          Register on-chain to use the ZKlaim protocol
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <>
+      {/* Hash computation warning dialog */}
+      <AlertDialog open={showHashWarning} onOpenChange={setShowHashWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Cryptographic Verification
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                To verify your registration status on-chain, we need to compute a
+                cryptographic hash of your address using the Aleo SDK.
+              </p>
+              <p className="font-medium text-foreground">
+                This may take 5-10 seconds on first run.
+              </p>
+              <p className="text-xs">
+                The hash will be cached locally, so future checks will be instant.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleHashWarningCancel}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleHashWarningConfirm}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-primary" />
+            User Registration
+          </CardTitle>
+          <CardDescription>
+            Register on-chain to use the ZKlaim protocol
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
         {/* Connected Address */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Address</span>
@@ -496,5 +561,6 @@ export function UserRegistration() {
         </div>
       </CardContent>
     </Card>
+    </>
   );
 }
