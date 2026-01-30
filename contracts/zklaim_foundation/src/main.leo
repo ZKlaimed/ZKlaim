@@ -41,6 +41,16 @@ program zklaim_foundation.aleo {
     }
 
     // =============================================
+    // CONSTRUCTOR (required for deployment)
+    // =============================================
+
+    // Non-upgradable constructor - program is immutable after deployment
+    @noupgrade
+    async constructor() {
+        // Leo compiler automatically generates the constructor logic
+    }
+
+    // =============================================
     // ADMIN FUNCTIONS
     // =============================================
 
