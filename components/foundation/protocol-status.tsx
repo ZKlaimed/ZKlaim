@@ -48,12 +48,14 @@ export function ProtocolStatus() {
         error: info.error,
       });
     } catch (error) {
+      // Handle errors gracefully - don't crash the UI
+      console.error('Protocol status check failed:', error);
       setStatus({
         contractConnected: false,
         contractVersion: 0,
         networkConnected: false,
         latestBlock: null,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Unable to connect to network. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -112,9 +114,9 @@ export function ProtocolStatus() {
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
             {status?.networkConnected ? (
-              <Wifi className="h-4 w-4 text-green-500" />
+              <Wifi className="h-4 w-4 text-primary" />
             ) : (
-              <WifiOff className="h-4 w-4 text-red-500" />
+              <WifiOff className="h-4 w-4 text-destructive" />
             )}
             Network
           </span>
