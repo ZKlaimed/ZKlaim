@@ -88,62 +88,60 @@ export default function Home() {
       <RootLayout>
         {/* Hero Section */}
         <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-4 text-center">
-          {/* Background: GridPattern with highlighted squares */}
-          <GridPattern
-            width={40}
-            height={40}
-            x={-1}
-            y={-1}
-            strokeDasharray="0"
-            squares={[
-              [4, 4], [5, 1], [8, 2], [6, 6], [10, 5], [13, 3],
-              [2, 8], [7, 9], [15, 7], [12, 10], [3, 12], [9, 11],
-              [16, 4], [14, 8], [1, 5], [11, 2], [17, 9], [4, 10],
-            ]}
-            className="absolute inset-0 -z-10 h-full w-full fill-primary/[0.03] stroke-white/[0.05] dark:fill-primary/[0.08] dark:stroke-white/[0.08] [mask-image:radial-gradient(600px_circle_at_center,white,transparent)]"
-          />
-
-          {/* Gradient blobs for visual depth */}
-          <div className="absolute left-1/4 top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-primary/30 blur-[120px]"></div>
-          <div className="absolute right-1/4 bottom-1/4 -z-10 h-[350px] w-[350px] rounded-full bg-accent/25 blur-[100px]"></div>
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[150px]"></div>
+          {/* Background layer - positioned behind content */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            {/* Grid pattern */}
+            <GridPattern
+              width={40}
+              height={40}
+              x={-1}
+              y={-1}
+              strokeDasharray="0"
+              squares={[
+                [4, 4], [5, 1], [8, 2], [6, 6], [10, 5], [13, 3],
+                [2, 8], [7, 9], [15, 7], [12, 10], [3, 12], [9, 11],
+                [16, 4], [14, 8], [1, 5], [11, 2], [17, 9], [4, 10],
+              ]}
+              className="h-full w-full fill-blue-500/10 stroke-blue-400/20 [mask-image:radial-gradient(800px_circle_at_center,white,transparent)]"
+            />
+            {/* Gradient blobs for visual depth */}
+            <div className="absolute left-1/4 top-1/4 h-[400px] w-[400px] rounded-full bg-blue-600/40 blur-[120px]"></div>
+            <div className="absolute right-1/4 bottom-1/4 h-[350px] w-[350px] rounded-full bg-cyan-500/30 blur-[100px]"></div>
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-blue-500/20 blur-[150px]"></div>
+          </div>
 
           {/* Hero content with staggered BlurFade animations */}
-          <BlurFade delay={0.1} direction="up">
+          <BlurFade delay={0.1} direction="up" className="relative z-10">
             <span className="mb-4 inline-flex items-center rounded-full border bg-background/50 px-3 py-1 text-sm font-medium text-muted-foreground backdrop-blur-sm">
               <span className="mr-2 h-2 w-2 rounded-full bg-accent"></span>
               Live on Aleo Testnet
             </span>
           </BlurFade>
 
-          <BlurFade delay={0.2} direction="up">
+          <BlurFade delay={0.2} direction="up" className="relative z-10">
             <h1 className="mt-4 max-w-4xl text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
               Privacy-Preserving Insurance <br />
               <span className="text-primary">on Aleo</span>
             </h1>
           </BlurFade>
 
-          <BlurFade delay={0.3} direction="up">
+          <BlurFade delay={0.3} direction="up" className="relative z-10">
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
               Get coverage without revealing sensitive data.
               Zero-knowledge proofs verify your eligibility while keeping your information private.
             </p>
           </BlurFade>
 
-          <BlurFade delay={0.4} direction="up">
+          <BlurFade delay={0.4} direction="up" className="relative z-10">
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              {/* Primary CTA: ShimmerButton for visual emphasis */}
-              <ShimmerButton
-                className="h-12 px-8 text-base font-medium"
-                shimmerColor="hsl(var(--primary))"
-                background="hsl(var(--primary))"
-              >
-                <Link href="/dashboard" className="flex items-center">
+              {/* Primary CTA */}
+              <Button size="lg" asChild className="h-12 px-8 text-base">
+                <Link href="/dashboard">
                   Get Coverage <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
-              </ShimmerButton>
+              </Button>
 
-              {/* Secondary CTA: Standard outline button */}
+              {/* Secondary CTA */}
               <Button size="lg" variant="outline" asChild className="h-12 px-8 text-base">
                 <Link href="/docs">
                   Read Documentation
@@ -231,14 +229,9 @@ export default function Home() {
                 Join the future of insurance. Private, fast, and fair.
               </p>
               <div className="mt-8 flex justify-center gap-4">
-                {/* ShimmerButton for CTA emphasis */}
-                <ShimmerButton
-                  className="h-11 px-8 text-base font-medium"
-                  shimmerColor="hsl(var(--primary))"
-                  background="hsl(var(--primary))"
-                >
+                <Button size="lg" asChild>
                   <Link href="/dashboard">Launch App</Link>
-                </ShimmerButton>
+                </Button>
               </div>
             </div>
           </BlurFade>
