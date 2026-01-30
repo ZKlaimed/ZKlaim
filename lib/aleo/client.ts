@@ -6,8 +6,9 @@
 import { AleoNetworkClient } from '@provablehq/sdk';
 
 // Network configuration
-const TESTNET_URL = 'https://api.explorer.provable.com/v1/testnet';
-const MAINNET_URL = 'https://api.explorer.provable.com/v1/mainnet';
+// Note: The SDK appends the network name automatically, so we use the base URL
+const TESTNET_URL = 'https://api.explorer.provable.com/v1';
+const MAINNET_URL = 'https://api.explorer.provable.com/v1';
 
 // Determine which network to use based on environment
 const isMainnet = process.env.NEXT_PUBLIC_NETWORK === 'mainnet';
