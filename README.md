@@ -6,6 +6,8 @@
 
 A decentralized insurance protocol that enables users to obtain coverage without revealing sensitive personal data. Using zero-knowledge proofs on the Aleo blockchain, users can prove eligibility for coverage (e.g., "I'm a non-smoker," "I have no at-fault accidents") without disclosing underlying records.
 
+Checkout the Live Deployed URL: https://z-klaim.vercel.app/
+
 ## Overview
 
 ZKLAIM reimagines insurance for the privacy-conscious era:
