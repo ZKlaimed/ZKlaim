@@ -9,13 +9,13 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
-import { 
-  Shield, 
-  Lock, 
-  Zap, 
-  ArrowRight, 
-  FileCheck, 
-  Activity 
+import {
+  Shield,
+  Lock,
+  Zap,
+  ArrowRight,
+  FileCheck,
+  Activity
 } from 'lucide-react';
 
 // Load Geist fonts
@@ -55,7 +55,7 @@ export default function Home() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-              Get coverage without revealing sensitive data. 
+              Get coverage without revealing sensitive data.
               Zero-knowledge proofs verify your eligibility while keeping your information private.
             </p>
 
@@ -93,7 +93,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
-                  Your medical and personal data never leaves your device. 
+                  Your medical and personal data never leaves your device.
                   ZK proofs verify claims without revealing the underlying sensitive information.
                 </CardDescription>
               </CardContent>
@@ -108,7 +108,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
-                  Smart contracts automatically trigger payouts when predefined conditions are met. 
+                  Smart contracts automatically trigger payouts when predefined conditions are met.
                   No manual claims processing or delays.
                 </CardDescription>
               </CardContent>
@@ -123,7 +123,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base">
-                  All logic is executed on-chain. Policies are immutable, and claim verification 
+                  All logic is executed on-chain. Policies are immutable, and claim verification
                   is mathematically proven correct.
                 </CardDescription>
               </CardContent>
