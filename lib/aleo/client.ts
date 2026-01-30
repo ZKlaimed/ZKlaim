@@ -194,19 +194,49 @@ function hash_addr:
     output r1 as field.public;
 `;
 
-// Cache for address hashes to avoid recomputation
-const addressHashCache = new Map<string, string>();
+// LocalStorage key for persisting address hashes
+const HASH_CACHE_KEY = 'zklaim_address_hashes';
+
+/**
+ * Get cached hashes from localStorage
+ */
+function getHashCache(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const cached = localStorage.getItem(HASH_CACHE_KEY);
+    return cached ? JSON.parse(cached) : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Save hash to localStorage cache
+ */
+function saveHashToCache(address: string, hash: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const cache = getHashCache();
+    cache[address] = hash;
+    localStorage.setItem(HASH_CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.error('Failed to save hash to cache:', e);
+  }
+}
 
 /**
  * Compute the BHP256 hash of an address (same as on-chain)
  * This runs the hash computation locally using the Aleo SDK
+ * Results are cached in localStorage to avoid recomputation on page reload
  * @param address - The Aleo address to hash
  * @returns The field hash as a string (e.g., "123...456field")
  */
 export async function hashAddressBHP256(address: string): Promise<string> {
-  // Check cache first
-  if (addressHashCache.has(address)) {
-    return addressHashCache.get(address)!;
+  // Check localStorage cache first (persists across page reloads)
+  const cache = getHashCache();
+  if (cache[address]) {
+    console.log('🔐 Using cached hash for address');
+    return cache[address];
   }
 
   try {
@@ -214,7 +244,7 @@ export async function hashAddressBHP256(address: string): Promise<string> {
     const account = new Account();
     programManager.setAccount(account);
 
-    console.log('🔐 Computing BHP256 hash for address...');
+    console.log('🔐 Computing BHP256 hash for address (first time, will be cached)...');
     // run(program, function_name, inputs, proveExecution, imports, keySearchParams, ...)
     // We don't need proof generation, just the output
     const response = await programManager.run(
@@ -226,10 +256,10 @@ export async function hashAddressBHP256(address: string): Promise<string> {
     const outputs = response.getOutputs();
     const hash = outputs[0];
 
-    console.log('✅ Hash computed:', hash);
+    console.log('✅ Hash computed and cached:', hash);
 
-    // Cache the result
-    addressHashCache.set(address, hash);
+    // Cache the result in localStorage
+    saveHashToCache(address, hash);
 
     return hash;
   } catch (error) {

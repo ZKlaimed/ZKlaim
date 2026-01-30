@@ -484,10 +484,14 @@ export function UserRegistration() {
         )}
 
         {/* Info box */}
-        <div className="rounded-md bg-primary/10 p-3">
+        <div className="rounded-md bg-primary/10 p-3 space-y-2">
           <p className="text-xs text-primary">
-            <strong>Note:</strong> Registration requires a small transaction fee (~0.1 credits).
+            <strong>Note:</strong> Registration requires a small transaction fee (~0.5 credits).
             Make sure you have testnet credits in your wallet.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            First-time verification may take a few seconds to compute the cryptographic hash.
+            Subsequent checks will be instant.
           </p>
         </div>
       </CardContent>
