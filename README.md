@@ -1,40 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# ZKLAIM
+
+**Privacy-Preserving Insurance on Aleo**
+
+A decentralized insurance protocol that enables users to obtain coverage without revealing sensitive personal data. Using zero-knowledge proofs on the Aleo blockchain, users can prove eligibility for coverage (e.g., "I'm a non-smoker," "I have no at-fault accidents") without disclosing underlying records.
+
+## Overview
+
+ZKLAIM reimagines insurance for the privacy-conscious era:
+
+- **For Users:** Get insurance without surrendering privacy. No data stored by insurers that can be breached, sold, or used against you.
+- **For Insurers/Pools:** Reduced data liability, cryptographic proof of eligibility, automated claims via oracles.
+- **For Regulators:** Selective disclosure capabilities for audits without mass surveillance.
+
+## Features
+
+- **Privacy-First Architecture** — User data never leaves their device. Only ZK proofs are shared.
+- **Client-Side Proof Generation** — All ZK proofs generated in the browser via WASM.
+- **Encrypted Policy State** — Policy details encrypted with user's key on-chain.
+- **Parametric Claims** — Oracle-triggered payouts bypass human intervention.
+- **Decentralized Risk Pools** — Community-governed liquidity pools.
+
+## Tech Stack
+
+### Current Implementation
+
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| Next.js | React framework | 16.x (Pages Router) |
+| React | UI library | 19.x |
+| Tailwind CSS | Styling | 4.x |
+| shadcn/ui | Component library | Latest |
+| lucide-react | Icons | 0.563.x |
+
+### Planned
+
+| Technology | Purpose |
+|------------|---------|
+| Aleo | L1 blockchain |
+| Leo | Smart contract language |
+| snarkVM | ZK proving system |
+| Prisma | Database ORM |
+| PostgreSQL | Database |
+| Redis | Caching/sessions |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm, yarn, pnpm, or bun
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/zklaim.git
+cd zklaim
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## Project Structure
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+```
+zklaim/
+├── pages/              # Next.js pages
+│   ├── _app.js         # App wrapper
+│   ├── _document.js    # HTML document
+│   ├── index.js        # Landing page
+│   └── api/            # API routes
+├── components/         # React components
+│   └── ui/             # shadcn/ui components
+├── lib/                # Utilities
+│   └── utils.js        # Helper functions
+├── styles/             # Stylesheets
+│   └── globals.css     # Global styles + design tokens
+├── docs/               # Documentation
+└── public/             # Static assets
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### Planned Smart Contracts
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Six Leo programs for the Aleo blockchain:
 
-## Learn More
+| Program | Purpose |
+|---------|---------|
+| `policy_registry.aleo` | Manage policy lifecycle |
+| `risk_pool.aleo` | Manage liquidity pools |
+| `claims_engine.aleo` | Process claims |
+| `oracle_bridge.aleo` | Relay external data |
+| `attestation_registry.aleo` | Manage attestors |
+| `governance.aleo` | Protocol governance |
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+- `CLAUDE.md` — Project guidelines and development instructions
+- `docs/ARCHITECTURE.md` — System architecture (planned)
+- `docs/SMART_CONTRACTS.md` — Leo contract documentation (planned)
+- `docs/API_REFERENCE.md` — API endpoint specs (planned)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development Status
 
-## Deploy on Vercel
+**Phase 1 (Current):** Foundation & Parametric Insurance
+- Next.js framework initialized
+- Tailwind CSS 4 configured
+- shadcn/ui configured
+- Basic project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Upcoming:**
+- Parametric insurance products (flight delay, weather events)
+- Leo smart contract development
+- Wallet integration
+- ZK proof generation via WASM
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+## Roadmap
+
+1. **Phase 1:** Parametric insurance (flight delay, weather)
+2. **Phase 2:** Auto insurance with telematics
+3. **Phase 3:** Health insurance (supplemental)
+4. **Phase 4:** Full-stack insurance products
+
+## License
+
+MIT
