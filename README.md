@@ -2,6 +2,8 @@
 
 **Privacy-Preserving Insurance on Aleo**
 
+> **Note:** The smart contracts are fully functional and deployed to Aleo Testnet. The Akindo submission could not be updated after the initial demo submission, so it still references "demo mode" — but the on-chain integration is real and working. See [deployed contract on explorer](https://testnet.explorer.provable.com/transaction/at1u8j6lxc7wdjudwjuhl4u0wqv0gxua5xgl8p5w4vnx6wlwth8mvqq2j76jw).
+
 A decentralized insurance protocol that enables users to obtain coverage without revealing sensitive personal data. Using zero-knowledge proofs on the Aleo blockchain, users can prove eligibility for coverage (e.g., "I'm a non-smoker," "I have no at-fault accidents") without disclosing underlying records.
 
 ## Overview
@@ -22,7 +24,7 @@ ZKLAIM reimagines insurance for the privacy-conscious era:
 
 ## Tech Stack
 
-### Current Implementation
+### Frontend
 
 | Technology | Purpose | Version |
 |------------|---------|---------|
@@ -32,13 +34,19 @@ ZKLAIM reimagines insurance for the privacy-conscious era:
 | shadcn/ui | Component library | Latest |
 | lucide-react | Icons | 0.563.x |
 
+### Blockchain
+
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| Aleo | L1 blockchain | Testnet |
+| Leo | Smart contract language | 3.4.0 |
+| @provablehq/sdk | Aleo TypeScript SDK | 0.9.15 |
+| Leo Wallet | Wallet integration | Latest |
+
 ### Planned
 
 | Technology | Purpose |
 |------------|---------|
-| Aleo | L1 blockchain |
-| Leo | Smart contract language |
-| snarkVM | ZK proving system |
 | Prisma | Database ORM |
 | PostgreSQL | Database |
 | Redis | Caching/sessions |
@@ -49,6 +57,8 @@ ZKLAIM reimagines insurance for the privacy-conscious era:
 
 - Node.js 18+
 - npm, yarn, pnpm, or bun
+- Leo CLI 3.4.0+ (for contract development)
+- Leo Wallet browser extension (for testing)
 
 ### Installation
 
@@ -70,61 +80,76 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ```
 zklaim/
-├── pages/              # Next.js pages
-│   ├── _app.js         # App wrapper
-│   ├── _document.js    # HTML document
-│   ├── index.js        # Landing page
-│   └── api/            # API routes
-├── components/         # React components
-│   └── ui/             # shadcn/ui components
-├── lib/                # Utilities
-│   └── utils.js        # Helper functions
-├── styles/             # Stylesheets
-│   └── globals.css     # Global styles + design tokens
-├── docs/               # Documentation
-└── public/             # Static assets
+├── contracts/              # Leo smart contracts
+│   └── zklaim_foundation/  # Foundation contract (deployed)
+├── pages/                  # Next.js pages
+│   ├── _app.tsx            # App wrapper
+│   ├── _document.tsx       # HTML document
+│   ├── index.tsx           # Landing page
+│   ├── dashboard/          # Dashboard page
+│   └── api/                # API routes
+├── components/             # React components
+│   ├── foundation/         # Protocol components
+│   ├── layout/             # Layout components
+│   ├── providers/          # Context providers
+│   └── ui/                 # shadcn/ui components
+├── lib/                    # Utilities
+│   ├── aleo/               # Aleo SDK integration
+│   └── utils.ts            # Helper functions
+├── types/                  # TypeScript types
+├── styles/                 # Stylesheets
+├── docs/                   # Documentation
+└── public/                 # Static assets
 ```
 
-### Planned Smart Contracts
+### Smart Contracts
 
-Six Leo programs for the Aleo blockchain:
-
-| Program | Purpose |
-|---------|---------|
-| `policy_registry.aleo` | Manage policy lifecycle |
-| `risk_pool.aleo` | Manage liquidity pools |
-| `claims_engine.aleo` | Process claims |
-| `oracle_bridge.aleo` | Relay external data |
-| `attestation_registry.aleo` | Manage attestors |
-| `governance.aleo` | Protocol governance |
+| Program | Purpose | Status |
+|---------|---------|--------|
+| `zklaim_foundation.aleo` | User registration, protocol foundation | ✅ Deployed |
+| `attestation_registry.aleo` | Manage attestors | Planned |
+| `policy_registry.aleo` | Manage policy lifecycle | Planned |
+| `risk_pool.aleo` | Manage liquidity pools | Planned |
+| `claims_engine.aleo` | Process claims | Planned |
+| `oracle_bridge.aleo` | Relay external data | Planned |
+| `governance.aleo` | Protocol governance | Planned |
 
 ## Documentation
 
 - `CLAUDE.md` — Project guidelines and development instructions
+- `docs/wave 1/SUMMARY.md` — Wave 1 completion summary
 - `docs/ARCHITECTURE.md` — System architecture (planned)
 - `docs/SMART_CONTRACTS.md` — Leo contract documentation (planned)
-- `docs/API_REFERENCE.md` — API endpoint specs (planned)
 
 ## Development Status
 
-**Phase 1 (Current):** Foundation & Parametric Insurance
-- Next.js framework initialized
-- Tailwind CSS 4 configured
-- shadcn/ui configured
-- Basic project structure
+### Wave 1: Foundation ✅ Complete
 
-**Upcoming:**
-- Parametric insurance products (flight delay, weather events)
-- Leo smart contract development
-- Wallet integration
-- ZK proof generation via WASM
+- Leo contract `zklaim_foundation.aleo` deployed to testnet
+- Leo Wallet integration with transaction signing
+- On-chain user registration with BHP256 hash verification
+- Client-side registration verification via Aleo SDK
+- Dashboard with protocol status and registration UI
+- Full transaction flow: sign → submit → confirm → verify
+
+**Deployed Contract:** [`zklaim_foundation.aleo`](https://testnet.explorer.provable.com/transaction/at1u8j6lxc7wdjudwjuhl4u0wqv0gxua5xgl8p5w4vnx6wlwth8mvqq2j76jw)
+
+### Wave 2: Attestations (Next)
+
+- Deploy `attestation_registry.aleo` contract
+- Build attestation viewer component
+- Implement attestation creation flow
+- Add Zustand state management
+- Integrate React Query for data fetching
 
 ## Roadmap
 
-1. **Phase 1:** Parametric insurance (flight delay, weather)
-2. **Phase 2:** Auto insurance with telematics
-3. **Phase 3:** Health insurance (supplemental)
-4. **Phase 4:** Full-stack insurance products
+1. **Wave 1:** Foundation & Protocol Setup ✅
+2. **Wave 2:** Attestation System (in progress)
+3. **Wave 3:** Parametric Insurance (flight delay, weather)
+4. **Wave 4:** Auto insurance with telematics
+5. **Wave 5:** Health insurance (supplemental)
+6. **Wave 6:** Full-stack insurance products
 
 ## License
 
