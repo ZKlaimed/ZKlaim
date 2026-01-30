@@ -3,7 +3,7 @@
  * Provides network connectivity and program execution capabilities
  */
 
-import { AleoNetworkClient } from '@provablehq/sdk';
+import { AleoNetworkClient, Account, ProgramManager } from '@provablehq/sdk';
 
 // Network configuration
 // Note: The SDK appends the network name automatically, so we use the base URL
@@ -134,4 +134,127 @@ export async function getNetworkInfo(): Promise<NetworkInfo> {
     latestHeight,
     url: networkUrl,
   };
+}
+
+/**
+ * Get a mapping value from a program
+ * @param programId - The program ID (e.g., 'zklaim_foundation.aleo')
+ * @param mappingName - The mapping name (e.g., 'user_count')
+ * @param key - The key to lookup (e.g., '0u8')
+ * @returns The mapping value or null if not found
+ */
+export async function getMappingValue(
+  programId: string,
+  mappingName: string,
+  key: string
+): Promise<string | null> {
+  try {
+    // Use the REST API to query the mapping directly
+    const network = isMainnet ? 'mainnet' : 'testnet';
+    const url = `${networkUrl}/${network}/program/${programId}/mapping/${mappingName}/${key}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // Key not found in mapping
+      }
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const value = await response.text();
+    // Remove quotes if present
+    return value.replace(/^"|"$/g, '');
+  } catch (error) {
+    console.error(`Failed to get mapping value ${programId}/${mappingName}/${key}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Get the user count from the zklaim_foundation contract
+ */
+export async function getUserCount(): Promise<number> {
+  const value = await getMappingValue('zklaim_foundation.aleo', 'user_count', '0u8');
+  if (value) {
+    // Parse the value (e.g., "1u64" -> 1)
+    const match = value.match(/^(\d+)u\d+$/);
+    if (match) {
+      return parseInt(match[1], 10);
+    }
+  }
+  return 0;
+}
+
+// Program to compute BHP256 hash of an address (same as on-chain)
+const HASH_PROGRAM = `program hash_address.aleo;
+
+function hash_addr:
+    input r0 as address.public;
+    hash.bhp256 r0 into r1 as field;
+    output r1 as field.public;
+`;
+
+// Cache for address hashes to avoid recomputation
+const addressHashCache = new Map<string, string>();
+
+/**
+ * Compute the BHP256 hash of an address (same as on-chain)
+ * This runs the hash computation locally using the Aleo SDK
+ * @param address - The Aleo address to hash
+ * @returns The field hash as a string (e.g., "123...456field")
+ */
+export async function hashAddressBHP256(address: string): Promise<string> {
+  // Check cache first
+  if (addressHashCache.has(address)) {
+    return addressHashCache.get(address)!;
+  }
+
+  try {
+    const programManager = new ProgramManager();
+    const account = new Account();
+    programManager.setAccount(account);
+
+    console.log('🔐 Computing BHP256 hash for address...');
+    // run(program, function_name, inputs, proveExecution, imports, keySearchParams, ...)
+    // We don't need proof generation, just the output
+    const response = await programManager.run(
+      HASH_PROGRAM,
+      'hash_addr',
+      [address],
+      false // proveExecution - we just want the result, not a proof
+    );
+    const outputs = response.getOutputs();
+    const hash = outputs[0];
+
+    console.log('✅ Hash computed:', hash);
+
+    // Cache the result
+    addressHashCache.set(address, hash);
+
+    return hash;
+  } catch (error) {
+    console.error('Failed to compute address hash:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if a user is registered on-chain
+ * Computes the BHP256 hash of the address and queries the registered_users mapping
+ * @param address - The Aleo address to check
+ * @returns true if registered, false otherwise
+ */
+export async function isUserRegistered(address: string): Promise<boolean> {
+  try {
+    // Compute the hash of the address (same as on-chain)
+    const hash = await hashAddressBHP256(address);
+
+    // Query the registered_users mapping
+    const value = await getMappingValue('zklaim_foundation.aleo', 'registered_users', hash);
+
+    return value === 'true';
+  } catch (error) {
+    console.error('Failed to check user registration:', error);
+    return false;
+  }
 }
